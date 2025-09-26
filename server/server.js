@@ -2,9 +2,13 @@ import express from "express";
 import pool from "./db.js";
 import leaderboardRoutes from "./routes/leaderboard.js";
 import userRoutes from "./routes/user.js";
+import cors from "cors"
 
 const app = express();
 app.use(express.json());
+app.use(cors({
+  origin: "http://localhost:3001"   
+}));
 app.use("/api/leaderboard", leaderboardRoutes);
 app.use("/api/user", userRoutes);
 
