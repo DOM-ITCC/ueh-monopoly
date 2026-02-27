@@ -14,7 +14,7 @@ export const Header = () => {
 
       <nav className="flex items-center gap-6 text-[20px] font-medium text-gray-800">
         <a
-          href="#"
+          href="/"
           className="px-4 py-1 rounded-full hover:bg-gray-300 transition"
         >
           Trang chủ

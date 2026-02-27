@@ -2,15 +2,21 @@ import express from "express";
 import pool from "./db.js";
 import leaderboardRoutes from "./routes/leaderboard.js";
 import userRoutes from "./routes/user.js";
+import gameSessionRoutes from "./routes/game-session.js"
 import cors from "cors"
+import cookieParser from "cookie-parser";
+import 'dotenv/config'
 
 const app = express();
 app.use(express.json());
 app.use(cors({
-  origin: "http://localhost:3001"   
+  origin: "http://localhost:5173",
+  credentials: true
 }));
+app.use(cookieParser())
 app.use("/api/leaderboard", leaderboardRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/game-session", gameSessionRoutes);
 
 app.get("/", (req, res) => {
   res.send(

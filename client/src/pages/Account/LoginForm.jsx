@@ -1,13 +1,13 @@
 "use client"
 
 import JustValidate from "just-validate";
-import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { FaEnvelope, FaAddressBook, FaUser } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import { toast, Toaster } from "sonner";
 
 export const LoginForm = () => {
-  const router = useRouter();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const validation = new JustValidate('#login-form');
@@ -52,12 +52,13 @@ export const LoginForm = () => {
           student_id: student_id
         };
 
-        const promise = fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/user/login`, {
+        const promise = fetch(`${import.meta.env.VITE_BASE_URL}/api/user/login`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify(finalData)
+          body: JSON.stringify(finalData),
+          credentials: "include"
         })
           .then((res) => res.json())
           .then((data) => {
@@ -69,7 +70,7 @@ export const LoginForm = () => {
           success: (data) => {
             if (data.status == "success") {
               setTimeout(() => {
-                router.push("/game");
+                navigate("/game");
               }, 1200);
             }
             return data.message;
@@ -82,7 +83,7 @@ export const LoginForm = () => {
   return (
     <>
       <Toaster />
-      <form id="login-form" className="flex flex-col gap-[10px]">
+      <form id="login-form" className="flex flex-col gap-[15px]">
         <div className="flex items-center gap-3 px-4 py-3 rounded-full border-[1px] border-[grey]">
           <FaUser className="text-gray-500" />
           <input

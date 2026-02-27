@@ -55,4 +55,20 @@ router.get("/bot", async (req, res) => {
   }
 });
 
+// GET /api/leaderboard/player-num
+router.get("/player-num", async (req, res) => {
+  try {
+    const [rows] = await pool.query("SELECT COUNT(*) AS playerNum FROM users");
+
+    res.json({
+      status: "success",
+      playerNum: rows[0].playerNum,
+    });
+  } catch (err) {
+    console.error("player_num error:", err);
+    res.status(500).json({ status: "error", message: "Database error" });
+  }
+});
+
+
 export default router;

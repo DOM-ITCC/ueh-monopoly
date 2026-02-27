@@ -1,5 +1,6 @@
 import express from "express";
 import pool from "../db.js";
+import jwt, { decode } from "jsonwebtoken";
 
 const router = express.Router();
 
@@ -48,7 +49,7 @@ router.post("/login", async (req, res) => {
   if (!fullname || !email || !student_id) {
     return res.status(400).json({
       status: "error",
-      message: "fullname, email and student_id is required",
+      message: "Vui lòng điền đầy đủ thông tin!",
     });
   }
 
@@ -65,7 +66,7 @@ router.post("/login", async (req, res) => {
 
       return res.status(201).json({
         status: "success",
-        message: "User created",
+        message: "Đăng nhập thành công!",
         user_id: result.insertId,
       });
     } else {
@@ -73,10 +74,35 @@ router.post("/login", async (req, res) => {
         "UPDATE users SET fullname = ?, student_id = ? WHERE email = ?",
         [fullname, student_id, email]
       );
+      if (rows[0].play_remaining <= 0) {
+        return res.json({
+          status: "error",
+          message: "Bạn đã hết lượt chơi"
+        });
+      }
+
+      const token = jwt.sign(
+        {
+          student_id: student_id,
+          email: email
+        },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: '1d'
+        }
+      )
+
+      res.cookie("token", token, {
+        maxAge: 24 * 60 * 60 * 1000,
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+        path: "/"
+      })
 
       return res.json({
         status: "success",
-        message: "User updated",
+        message: "Cập nhật thông tin và Đăng nhập thành công!",
         user_id: rows[0].user_id,
       });
     }
@@ -85,5 +111,58 @@ router.post("/login", async (req, res) => {
     res.status(500).json({ status: "error", message: "Database error" });
   }
 });
+
+// GET /api/user/verifyToken
+router.get("/verifyToken", async (req, res) => {
+  try {
+    const token = req.cookies.token;
+
+    if (!token) {
+      res.json({
+        status: "error",
+        message: "Vui lòng đăng nhập!"
+      });
+      return;
+    }
+
+    const decoded = jwt.decode(token, process.env.JWT_SECRET);
+    const { student_id, email } = decoded;
+
+    let [rows] = await pool.query(
+      "SELECT * FROM users WHERE student_id = ? AND email = ?",
+      [student_id, email]
+    );
+    if (rows.length == 0) {
+      res.json({
+        status: "error",
+        message: "Tài khoản không tồn tại trong hệ thống!"
+      });
+      return;
+    }
+
+    res.json({
+      status: "success",
+      message: "Token hợp lệ!",
+      userInfo: rows[0]
+    })
+  }
+  catch (err) {
+    res.status(500).json({ status: "error", message: err });
+  }
+})
+
+// GET /api/user/logout
+router.get("/logout", (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+    path: "/"
+  });
+  res.json({
+    status: "success",
+    message: "Đăng xuất thành công!"
+  })
+})
 
 export default router;
